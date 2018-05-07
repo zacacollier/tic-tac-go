@@ -16,16 +16,6 @@ type Game struct {
 	win  bool
 }
 
-type Win string
-
-const (
-	PORT         = 8080
-	Row      Win = "Row"
-	Column   Win = "Column"
-	Diagonal Win = "Diagonal"
-	None     Win = "None"
-)
-
 func MakeBoard() Game {
 	b := Game{
 		grid: [][]string{
@@ -80,7 +70,7 @@ func UnpackSlice(s []string, vars ...*string) {
 	}
 }
 
-func (b *Game) CheckForWin() (Win, int, bool) {
+func (b *Game) CheckForWin() (int, bool) {
 	columns := make([][]string, len(b.grid))
 
 	// check for horizontal wins
@@ -88,7 +78,7 @@ func (b *Game) CheckForWin() (Win, int, bool) {
 		if CompareCells(row, b.turn) {
 			fmt.Println(i, true)
 			b.win = true
-			return Row, i, true
+			return i, true
 		}
 		for j := range row {
 			columns[j] = append(columns[j], row[j])
@@ -100,7 +90,7 @@ func (b *Game) CheckForWin() (Win, int, bool) {
 		if CompareCells(col, b.turn) {
 			fmt.Println(i, true)
 			b.win = true
-			return Column, i, true
+			return i, true
 		}
 	}
 
@@ -112,13 +102,13 @@ func (b *Game) CheckForWin() (Win, int, bool) {
 		if CompareCells(diag, b.turn) {
 			b.win = true
 			if diags[0][2] == b.turn {
-				return Diagonal, 2, true
+				return 2, true
 			}
-			return Diagonal, i, true
+			return i, true
 		}
 	}
 
-	return None, -1, false
+	return -1, false
 }
 
 func GetInput(s *bufio.Scanner) (error, int, int) {
