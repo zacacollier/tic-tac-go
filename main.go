@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	. "github.com/fatih/color"
 	"os"
 	"regexp"
 	"strconv"
@@ -41,11 +42,22 @@ func (b *Game) printBoard() {
 	for _, row := range b.grid {
 		fmt.Println(row)
 	}
-	fmt.Printf("***** Current turn: %v *****\n", b.turn)
+}
+
+func (b *Game) printTurn() {
+	Yellow("***** Current turn: %v *****\n", b.turn)
 }
 
 func (b *Game) MakeMove(x, y int) {
-	b.grid[x][y] = b.turn
+	if b.isValid(x, y) {
+		b.grid[x][y] = b.turn
+		b.CheckForWin()
+		if b.win == false {
+			b.toggleTurn()
+		}
+	} else {
+		Red("this spot is taken, try again")
+	}
 }
 
 func (b *Game) toggleTurn() {
@@ -100,10 +112,8 @@ func (b *Game) CheckForWin() (Win, int, bool) {
 		if CompareCells(diag, b.turn) {
 			b.win = true
 			if diags[0][2] == b.turn {
-				fmt.Println(2, true)
 				return Diagonal, 2, true
 			}
-			fmt.Println(i, true)
 			return Diagonal, i, true
 		}
 	}
@@ -116,7 +126,6 @@ func GetInput(s *bufio.Scanner) (error, int, int) {
 	var row, column string
 	re := regexp.MustCompile("\\s")
 	for s.Scan() {
-		fmt.Println(s.Text())
 		moveArgs := strings.Split(
 			re.ReplaceAllString(s.Text(), ""),
 			",",
@@ -135,32 +144,26 @@ func GetInput(s *bufio.Scanner) (error, int, int) {
 	return nil, 0, 0
 }
 
-func (b *Game) printAndToggle() {
-	b.toggleTurn()
-	b.printBoard()
+func (b *Game) isValid(x, y int) bool {
+	return b.grid[x][y] == "_"
 }
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	b := MakeBoard()
+
 	for b.win == false {
-		b.printAndToggle()
+		b.printBoard()
+		b.printTurn()
 		err, row, column := GetInput(scanner)
 		b.MakeMove(row, column)
-		b.CheckForWin()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if b.win {
-			b.printBoard()
-			fmt.Printf("Player %v wins!\n", b.turn)
-			os.Exit(0)
-		} else {
-			b.printAndToggle()
-			err, row, column = GetInput(scanner)
-			b.MakeMove(row, column)
-			b.CheckForWin()
-		}
+	}
+	if b.win {
+		Green("Player %v wins!\n", b.turn)
+		os.Exit(0)
 	}
 }
